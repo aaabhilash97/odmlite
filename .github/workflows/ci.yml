@@ -28,6 +28,12 @@ jobs:
         run: |
           docker run -d --name mongo -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
           for i in $(seq 1 60); do
+            if [ "$(docker inspect -f '{{.State.Running}}' mongo)" != "true" ]; then
+              echo "mongo container exited:"
+              docker inspect -f 'exit={{.State.ExitCode}} oom={{.State.OOMKilled}} error={{.State.Error}}' mongo
+              docker logs mongo 2>&1 | tail -80
+              exit 1
+            fi
             state=$(docker exec mongo mongosh --quiet --eval '
               try { rs.status().members[0].stateStr }
               catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]}); "INITIATED" }' 2>&1 || true)
