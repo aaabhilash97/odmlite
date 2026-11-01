@@ -23,16 +23,19 @@ jobs:
       # Transactions need a replica set, which service containers can't configure,
       # so start a single-node replica set directly.
       - name: Start MongoDB replica set
+        # Output is captured rather than piped into `grep -q`: under bash -eo pipefail an
+        # early-exiting grep can fail the pipeline even when the check succeeded.
         run: |
           docker run -d --name mongo -p 27017:27017 mongo:8 --replSet rs0 --bind_ip_all
-          for i in $(seq 1 30); do
-            docker exec mongo mongosh --quiet --eval 'try { rs.status().ok } catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]}).ok }' | grep -q 1 && break
+          for i in $(seq 1 60); do
+            state=$(docker exec mongo mongosh --quiet --eval '
+              try { rs.status().members[0].stateStr }
+              catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]}); "INITIATED" }' 2>&1 || true)
+            echo "attempt $i: $state"
+            if [ "$state" = "PRIMARY" ]; then exit 0; fi
             sleep 2
           done
-          for i in $(seq 1 30); do
-            docker exec mongo mongosh --quiet --eval 'rs.status().members[0].stateStr' | grep -q PRIMARY && exit 0
-            sleep 2
-          done
+          docker logs mongo | tail -50
           exit 1
 
       - uses: actions/setup-python@v5
