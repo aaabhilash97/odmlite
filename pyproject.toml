@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "odmlite"
+dynamic = ["version"]
+description = "A small async MongoDB ODM on pydantic v2 and pymongo, compatible with the common subset of odmantic's API."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "Abhilash KM" }]
+keywords = ["mongodb", "odm", "pydantic", "asyncio", "pymongo", "odmantic"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: AsyncIO",
+    "Framework :: Pydantic :: 2",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Database",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.12,<3",
+    "pymongo>=4.13,<5",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-asyncio>=0.24"]
+
+[project.urls]
+Source = "https://github.com/aaabhilash97/odmlite"
+Issues = "https://github.com/aaabhilash97/odmlite/issues"
+
+[tool.hatch.version]
+path = "src/odmlite/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/odmlite"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
